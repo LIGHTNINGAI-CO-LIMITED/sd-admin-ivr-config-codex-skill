@@ -1,4 +1,0 @@
-﻿interface:
-  display_name: "闪电话术配置"
-  short_description: "用有效 API token 配置闪电话术智能 Agent。"
-  default_prompt: "用 sd-admin-ivr-config 帮我创建或更新闪电智能管理后台的话术智能 Agent 节点。"
