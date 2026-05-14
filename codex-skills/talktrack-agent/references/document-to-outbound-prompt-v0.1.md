@@ -44,11 +44,12 @@ Keep source evidence structured:
    - objection handling
    - qualification or next-step collection
    - closing / hangup handling
-4. Identify intent labels if the target prompt should emit `{"intent":"..."}`.
-5. If intent output is required, load `intent-usage-rules.md` and keep hangup / terminal labels compliant.
-6. Draft the outbound smart-Agent prompt.
-7. Review for grounding, privacy, intent rules, length, and import readiness.
-8. Output a prompt package. Do not import it automatically.
+4. Identify whether terminal closing is owned by the smart Agent itself or by downstream hangup / end nodes.
+5. Identify intent labels if the target prompt should emit `{"intent":"..."}`.
+6. If intent output is required, load `intent-usage-rules.md` and keep hangup / terminal labels plus terminal-closing ownership compliant.
+7. Draft the outbound smart-Agent prompt.
+8. Review for grounding, privacy, intent rules, terminal-closing overlap, length, and import readiness.
+9. Output a prompt package. Do not import it automatically.
 
 ## Prompt Package Output
 
@@ -101,6 +102,35 @@ The generated prompt should include:
 - Intent output rules when needed.
 - Hangup / terminal handling when needed.
 
+## Terminal Closing Ownership
+
+Before drafting terminal intent examples, decide which layer owns the final spoken closing.
+
+| Mode | Use When | Prompt Requirement |
+| --- | --- | --- |
+| Agent-owned closing | The smart Agent is the final speaker and no downstream terminal node will play another closing sentence | The Agent may speak the full closing and append the terminal intent JSON |
+| Downstream-node-owned closing | The smart Agent terminal intent maps to a later hangup / end node that will play its own closing | The Agent must only say a short acknowledgement and append the terminal intent JSON |
+
+When downstream terminal nodes own the closing, do not include long terminal examples in the prompt. Remove or shorten any terminal intent example that repeats downstream-node wording such as:
+
+- `再见`
+- `祝您生活愉快`
+- `先不打扰`
+- `稍后用微信加您`
+- `资料发过去`
+- `薪资范围`
+- `面试入口`
+- `通过后空了看`
+
+Preferred short terminal examples for downstream-owned closing:
+
+```text
+好的，我记下了。{"intent":"有意向或同意"}
+好的，明白了。{"intent":"没意向或不同意"}
+不好意思，我确认一下。{"intent":"不是本人或打错了"}
+好的，不留言了。{"intent":"语音助手/智能助理/机主助手"}
+```
+
 ## Ordinary-Node Source Conversion
 
 When the source is ordinary-node content:
@@ -127,6 +157,8 @@ Before calling the prompt package ready:
 - Is the call goal explicit?
 - Does the prompt tell the Agent what to do when the user interrupts, refuses, asks for details, or wants a human?
 - If intent JSON is required, does it follow `intent-usage-rules.md`?
+- If terminal intents map to downstream hangup / end nodes, are terminal examples short acknowledgements instead of full closing copy?
+- Did the review remove duplicate terminal wording such as goodbye, handoff promises, delivery-of-material promises, salary/interview details, and downstream closing sentences?
 - Is the generated prompt likely under the backend practical length limit?
 - Are sensitive fields removed or minimized?
 - Is backend import still a separate approval step?

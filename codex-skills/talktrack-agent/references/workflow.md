@@ -89,6 +89,7 @@ Start every run by naming the primary task mode. This prevents smart-Agent creat
 | `smart-agent-score` | Producing a 100-point smart-Agent health score with P0/P1/P2 findings | No |
 | `intent-port-check` | Checking prompt intent labels, graph ports, mappings, and terminal nodes | Read-only by default |
 | `terminal-hangup-check` | Checking the four allowed hangup / terminal labels and terminal-node behavior | Read-only by default |
+| `terminal-closing-overlap-check` | Checking whether smart-Agent terminal examples duplicate downstream hangup / end-node closing copy | Read-only by default |
 | `llm-config-check` | Checking `llmNodeModelConfig` across backend, frontend, and graph custom data | Read-only by default |
 | `prompt-readback-check` | Checking prompt length, hash, required sections, and readback consistency | Read-only by default |
 
@@ -215,7 +216,8 @@ Enforce these checks against both the prompt and IVR graph:
 - Hangup nodes must output only one of: `高意向成交类`, `待跟进留存类`, `无意向终止类`, `异常场景应急类`.
 - Do not let earlier customer state lock later intent. The final output follows the current SOP branch and current node mapping.
 - Output format must be `回复内容{"intent":"当前意图"}` with JSON directly at the end and no extra explanation.
-- Hangup replies must include `再见` and finish the closing sentence before the hangup action.
+- If the smart Agent itself is the final speaker, hangup replies must include `再见` and finish the closing sentence before the hangup action.
+- If the smart Agent's terminal intent maps to a downstream hangup / end node that will speak again, the Agent must only say a short acknowledgement plus `{"intent":"..."}`. The downstream node owns the formal closing, goodbye, handoff promise, and business-detail recap.
 
 For IVR graph validation, compare the prompt's terminal intent labels with:
 
@@ -224,6 +226,7 @@ For IVR graph validation, compare the prompt's terminal intent labels with:
 - Frontend smart node `customData.intentList[].label`
 - Frontend port labels/names/text
 - Terminal node `type=2`, `nextType=2`, and frontend `actionName=挂机`
+- Terminal node spoken text, if present, against terminal examples in the prompt. If both contain the same closing promise, goodbye, or detailed handoff copy, repair the prompt so the smart Agent uses only short acknowledgements.
 
 ## Prompt Import
 
@@ -267,6 +270,7 @@ Check:
 - For intent-enabled prompts, the imported prompt still follows `intent-usage-rules.md`.
 - The prompt's four hangup labels match IVR smart-node ports and map to `type=2`, `nextType=2`, `actionName=挂机` terminal nodes.
 - Non-hangup intent examples in the prompt are node IDs rather than terminal labels.
+- Terminal intent examples do not duplicate downstream terminal-node closing text. If downstream nodes speak the closing, smart-Agent terminal examples are short acknowledgements only.
 
 Optional browser check:
 
@@ -285,6 +289,7 @@ Core properties:
 - Score the current IVR against smart-Agent dimensions: node structure, `llmNodeModelConfig`, prompt readback integrity, intent / port governance, and archive / security hygiene.
 - Report P0 / P1 / P2 findings, plus whether the next step should be prompt import, intent-rule repair, backend fix, or live debug.
 - If a token is used, scan generated report files and raw JSON paths for an exact token leak before final delivery.
+- Include terminal-closing overlap findings: whether terminal intent examples in the prompt repeat downstream terminal-node copy, and whether the recommended fix is prompt-only or graph/terminal-node repair.
 
 ## Troubleshooting
 

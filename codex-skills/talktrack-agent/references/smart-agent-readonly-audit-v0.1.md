@@ -122,12 +122,14 @@ If the prompt or node uses `{"intent":"..."}`, load `intent-usage-rules.md` and 
 - Hangup / terminal intents use exactly the four allowed terminal labels from `intent-usage-rules.md`.
 - Smart node `llmNodeIntentList`, `llmNodeIntentMappingList`, frontend `intentList`, graph ports, and terminal nodes agree.
 - Terminal mappings point to `type=2`, `nextType=2`, hangup-style terminal nodes when the business meaning is hangup.
+- Terminal intent examples in the prompt follow terminal-closing ownership. If an intent maps to a downstream hangup / end node that will speak again, the prompt example must be a short acknowledgement only.
+- Terminal intent examples do not duplicate downstream terminal-node closing text, goodbye copy, handoff promises, or business-detail recaps.
 - Unknown, stale, duplicated, or unmapped intent labels are listed.
 
 Typical deductions:
 
 - P0-sized: terminal / hangup semantics are broken or map to missing targets.
-- P1-sized: prompt intent labels and graph ports disagree.
+- P1-sized: prompt intent labels and graph ports disagree, or smart-Agent terminal examples duplicate downstream terminal-node closing copy.
 - P2-sized: label naming is confusing but mapped correctly.
 
 ### 5. Archive And Security Hygiene: 20
@@ -157,7 +159,7 @@ Typical deductions:
 Set these booleans in the final summary:
 
 - `recommendPromptImport`: true when the prompt is missing, stale, truncated, mojibaked, or not readback-consistent.
-- `recommendIntentRuleFix`: true when intent labels, terminal labels, ports, or mappings violate `intent-usage-rules.md`.
+- `recommendIntentRuleFix`: true when intent labels, terminal labels, ports, mappings, or terminal-closing ownership violate `intent-usage-rules.md`.
 - `recommendBackendFix`: true when graph shape, node structure, or model config is broken and cannot be resolved by prompt-only work.
 - `recommendLiveDebug`: true only when readback looks structurally sound but live behavior still needs validation.
 
@@ -184,6 +186,11 @@ Suggested schema:
   "recommendIntentRuleFix": false,
   "recommendBackendFix": false,
   "recommendLiveDebug": false,
+  "terminalClosingOverlapCheck": {
+    "checked": false,
+    "overlapCount": 0,
+    "items": []
+  },
   "rawJsonPaths": [],
   "tokenLeakCheck": "PASS"
 }
@@ -201,7 +208,8 @@ When the user requests a durable report, include:
 6. `llmNodeModelConfig` summary.
 7. Prompt readback integrity summary.
 8. Intent / port governance summary.
-9. P0 / P1 / P2 issue list.
-10. Next-step recommendation flags.
-11. Scorer limitations and follow-up improvements.
-12. Token leak check result if a token was used.
+9. Terminal-closing overlap summary, including whether the smart Agent or downstream terminal node owns the final spoken closing.
+10. P0 / P1 / P2 issue list.
+11. Next-step recommendation flags.
+12. Scorer limitations and follow-up improvements.
+13. Token leak check result if a token was used.

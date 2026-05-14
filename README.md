@@ -8,6 +8,7 @@ Formerly `sd-admin-ivr-config`.
 - smart Agent / smart-node prompt import and readback validation
 - `llmNodeModelConfig` inspection
 - intent / port / terminal / hangup governance
+- terminal-closing ownership checks so smart-Agent terminal examples do not duplicate downstream hangup / end-node copy
 - smart-Agent read-only audit scoring
 
 Companion skills:

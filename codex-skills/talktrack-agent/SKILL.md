@@ -26,6 +26,7 @@ Use this TalkTrack-series skill to operate the Shandian Intelligent smart-Agent 
 - Keep raw JSON, full backend snapshots, and large exported artifacts under `D:\闪电智能\tmp`; write durable reports and SOP summaries to the formal Obsidian vault when the user asks for an artifact.
 - On Windows, do not use Windows PowerShell 5 for Chinese JSON write requests or inline Chinese payloads; use a UTF-8 Python script or UTF-8 files. PowerShell 5 may mojibake Chinese names/prompts.
 - When configuring, checking, or importing a prompt that contains `intent`, read `references/intent-usage-rules.md` first and enforce it against the prompt plus IVR ports/mappings.
+- Enforce terminal-closing ownership. If a smart Agent terminal `intent` maps to a later hangup / end node, the Agent must only say a short acknowledgement plus `{"intent":"..."}`; the formal closing sentence, goodbye, handoff promise, and repeated business details belong to the downstream terminal node. Only let the Agent speak the full closing when there is no downstream terminal node that will speak it.
 
 ## Quick Workflow
 
@@ -60,6 +61,7 @@ Choose one primary mode and keep the run inside that mode unless the user expand
 - `smart-agent-score`: run the smart-Agent read-only audit scorer and produce P0 / P1 / P2 findings plus next-step recommendations.
 - `intent-port-check`: verify intent labels, graph ports, terminal nodes, and backend / frontend / graph consistency.
 - `terminal-hangup-check`: verify hangup / terminal intent labels follow the four-label rule in `intent-usage-rules.md`.
+- `terminal-closing-overlap-check`: verify terminal intent examples in the prompt do not duplicate downstream hangup / end-node closing copy.
 - `llm-config-check`: verify `llmNodeModelConfig` exists and is consistent across backend, frontend, and graph custom data.
 - `prompt-readback-check`: compare prompt length / hash / required sections against the approved source prompt without printing sensitive prompt material unless the user asks.
 
