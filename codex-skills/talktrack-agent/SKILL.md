@@ -1,11 +1,31 @@
 ---
 name: talktrack-agent
+version: v0.1.7
+github_repo: LIGHTNINGAI-CO-LIMITED/TalkTrack-Agent
+github_path: codex-skills/talktrack-agent
+github_branch: main
 description: Use when configuring, creating, updating, validating, troubleshooting, read-only scoring, or drafting outbound smart-Agent prompts for Shandian Intelligent admin IVR workflows at ai.sd6g.com:1904, especially tasks involving arbitrary source-document to outbound prompt generation, 话术配置, 智能Agent/智能节点, 智能信息采集, 对话字段, collectParam, /api/web IVR APIs, sceneList/sceneListFrontend, prompt Markdown import, llmNodeModelConfig, intent/port mapping, terminal/hangup intents, smart-Agent audit scoring, or direct Bearer token API calls without logging in. For ordinary-node TalkTrack-Master work, use the talktrack-master skill instead.
 ---
 
 # TalkTrack-Agent
 
 Use this TalkTrack-series skill to operate the Shandian Intelligent smart-Agent layer by API, not by logging into the page. The default path is: the user provides a valid `Bearer` token, validate it with `/account/findInfo`, then call `/api/web` endpoints directly.
+
+## Skill Update Check
+
+At the start of any task using this skill, run the bundled update check:
+
+```powershell
+python "C:\Users\luona\.codex\skills\talktrack-agent\scripts\check_skill_update.py" --check
+```
+
+If the result is `update_available`, tell the user the local version and GitHub version, then recommend updating before continuing. Do not update automatically. Only when the user confirms, run:
+
+```powershell
+python "C:\Users\luona\.codex\skills\talktrack-agent\scripts\check_skill_update.py" --apply
+```
+
+If the check fails because GitHub or the network is unavailable, mention the failed check briefly and continue with the current local skill. The update check must not use, print, store, or request business API tokens; it only reads the public GitHub skill repository.
 
 ## Boundary
 
@@ -35,25 +55,26 @@ Use this TalkTrack-series skill to operate the Shandian Intelligent smart-Agent 
 
 ## Quick Workflow
 
-0. Classify the task mode before touching APIs: document-to-prompt drafting, smart Agent creation, prompt import, smart information collection design/check, read-only audit, intent / port check, terminal / hangup check, `llmNodeModelConfig` check, or prompt readback validation.
-1. Extract token from the user's curl or message.
+0. Run the Skill Update Check. If a newer GitHub version exists, recommend updating and wait for the user's confirmation before applying it.
+1. Classify the task mode before touching APIs: document-to-prompt drafting, smart Agent creation, prompt import, smart information collection design/check, read-only audit, intent / port check, terminal / hangup check, `llmNodeModelConfig` check, or prompt readback validation.
+2. Extract token from the user's curl or message.
    - Prefer `-H 'token: Bearer ...'`.
    - If only cookie is present, URL decode `token=Bearer%20...`.
-2. Validate:
+3. Validate:
    - `GET https://ai.sd6g.com:1904/api/web/account/findInfo`
    - Header: `token: Bearer <TOKEN>`
-3. Read base resources:
+4. Read base resources:
    - `GET /industry/findList`
    - `GET /ivr/findAllTtsVoiceBaseInfo`
    - `GET /ivr/findModelList`
    - `POST /ivr/findPage` with `{"query":{"searchName":""},"page":{"current":1,"size":10}}`
-4. Create IVR with `/ivr/insert`, or read the target IVR if updating.
-5. For smart Agent nodes, clone a known-good scene graph shape from an existing IVR, then replace only business fields.
-6. If the prompt contains `intent`, read `references/intent-usage-rules.md`; verify non-hangup intents use current node IDs, hangup intents are exactly the four allowed terminal labels, and labels match IVR ports.
-7. If the task involves lead qualification, customer identity, appointment, company, budget, service choice, or other structured follow-up data, read `references/smart-information-collection-v0.1.md`, infer collection fields from the scene, and add `{collectParam}` exactly once to the prompt package. The field list must be generated from the current scene, not copied from a fixed template. If backend writes are authorized, enable the front-page 智能信息采集 switch (`llmNodeCollectParamEnabled=1`) and configure the approved `llmNodeCollectParamList` fields during import/update.
-8. Import prompt Markdown as UTF-8. If the prompt is under 10,000 characters, write it unchanged; only compact when it is 10,000+ characters or a readback-verified write fails with `话术场景信息异常`.
-9. Verify with `/ivr/findSceneList/{ivrId}` and, when useful, open `/script-graph?ivrId=<ivrId>`.
-10. Delete temporary token files or auth dumps.
+5. Create IVR with `/ivr/insert`, or read the target IVR if updating.
+6. For smart Agent nodes, clone a known-good scene graph shape from an existing IVR, then replace only business fields.
+7. If the prompt contains `intent`, read `references/intent-usage-rules.md`; verify non-hangup intents use current node IDs, hangup intents are exactly the four allowed terminal labels, and labels match IVR ports.
+8. If the task involves lead qualification, customer identity, appointment, company, budget, service choice, or other structured follow-up data, read `references/smart-information-collection-v0.1.md`, infer collection fields from the scene, and add `{collectParam}` exactly once to the prompt package. The field list must be generated from the current scene, not copied from a fixed template. If backend writes are authorized, enable the front-page 智能信息采集 switch (`llmNodeCollectParamEnabled=1`) and configure the approved `llmNodeCollectParamList` fields during import/update.
+9. Import prompt Markdown as UTF-8. If the prompt is under 10,000 characters, write it unchanged; only compact when it is 10,000+ characters or a readback-verified write fails with `话术场景信息异常`.
+10. Verify with `/ivr/findSceneList/{ivrId}` and, when useful, open `/script-graph?ivrId=<ivrId>`.
+11. Delete temporary token files or auth dumps.
 
 ## Task Modes
 
@@ -76,6 +97,7 @@ Choose one primary mode and keep the run inside that mode unless the user expand
 
 ## Bundled Scripts
 
+- Use `scripts/check_skill_update.py --check` before starting a task to compare the local skill version with GitHub. Use `--apply` only after the user confirms they want to update the local installed skill.
 - Use `scripts/create_doushen_real_prompt_ivr.py` for "create a new IVR from a stable template + import a UTF-8 prompt" tasks when its parameters fit. It validates the token, clones the template graph, writes raw prompts under 10,000 characters unchanged, falls back to compacted prompt only after length/failure, and reports `promptStrategy`, `promptWrittenChars`, hashes, readback matches, port labels, and terminal nodes.
 - Run bundled scripts with a token argument only for the current task; do not hardcode real tokens into scripts, docs, commits, or examples.
 
