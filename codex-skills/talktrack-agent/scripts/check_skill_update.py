@@ -34,7 +34,15 @@ class UpdateCheckError(RuntimeError):
 
 
 def request_bytes_urllib(url: str) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    request = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": "application/vnd.github+json",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+        },
+    )
     with urllib.request.urlopen(request, timeout=20) as response:
         return response.read()
 
@@ -44,7 +52,15 @@ def request_bytes_urllib_certifi(url: str) -> bytes:
         import certifi  # type: ignore
     except Exception as exc:  # pragma: no cover - optional fallback
         raise RuntimeError(f"certifi_unavailable error={exc}") from exc
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    request = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": "application/vnd.github+json",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+        },
+    )
     context = ssl.create_default_context(cafile=certifi.where())
     with urllib.request.urlopen(request, timeout=20, context=context) as response:
         return response.read()
@@ -52,7 +68,20 @@ def request_bytes_urllib_certifi(url: str) -> bytes:
 
 def request_bytes_curl(url: str) -> bytes:
     completed = subprocess.run(
-        ["curl.exe", "-L", "--fail", "--silent", "--show-error", url],
+        [
+            "curl.exe",
+            "-L",
+            "--fail",
+            "--silent",
+            "--show-error",
+            "-H",
+            "Accept: application/vnd.github+json",
+            "-H",
+            "Cache-Control: no-cache",
+            "-H",
+            "Pragma: no-cache",
+            url,
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         timeout=40,
@@ -70,6 +99,9 @@ def request_bytes_powershell(url: str) -> bytes:
         "[Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13;"
         "$wc=New-Object System.Net.WebClient;"
         "$wc.Headers.Add('User-Agent','TalkTrack-Skill-Update-Check/1.0');"
+        "$wc.Headers.Add('Accept','application/vnd.github+json');"
+        "$wc.Headers.Add('Cache-Control','no-cache');"
+        "$wc.Headers.Add('Pragma','no-cache');"
         "$bytes=$wc.DownloadData($args[0]);"
         "[Console]::Out.Write([Convert]::ToBase64String($bytes))"
     )
@@ -145,6 +177,27 @@ def remote_skill_path() -> str:
 
 
 def remote_head_sha() -> str:
+    try:
+        completed = subprocess.run(
+            [
+                "git",
+                "ls-remote",
+                f"https://github.com/{REPO}.git",
+                f"refs/heads/{BRANCH}",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=40,
+            check=False,
+        )
+        if completed.returncode == 0:
+            first = completed.stdout.strip().split()[0]
+            if re.fullmatch(r"[0-9a-fA-F]{40}", first):
+                return first
+    except Exception:
+        pass
+
     payload = request_json(ref_url())
     obj = payload.get("object")
     if not isinstance(obj, dict):
