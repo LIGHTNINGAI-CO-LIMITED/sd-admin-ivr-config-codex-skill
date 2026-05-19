@@ -1,6 +1,6 @@
 ---
 name: talktrack-agent
-version: v0.1.11
+version: v0.1.12
 github_repo: LIGHTNINGAI-CO-LIMITED/TalkTrack-Agent
 github_path: codex-skills/talktrack-agent
 github_branch: main
@@ -26,6 +26,15 @@ python "C:\Users\luona\.codex\skills\talktrack-agent\scripts\check_skill_update.
 ```
 
 If the check fails because GitHub, TLS/certificate chain, or the network is unavailable, do not treat the local skill as up-to-date. Report the local version and failure reason. For backend write/import/configuration tasks, pause and ask the user to update the skill or explicitly approve continuing with the local version. For read-only emergency investigation, you may continue only after stating that update status is unknown. The update check must not use, print, store, or request business API tokens; it only reads the public GitHub skill repository.
+
+### Stale Version Write Gate
+
+For backend write/import/configuration tasks, a stale or unknown skill version is a pre-authorization blocker. Do not ask the user to authorize backend changes such as "授权调整 <ivrId>" until the update gate is resolved.
+
+- If `local_version` is older than `v0.1.11`, stop and require a Skill update or bootstrap first.
+- If the update check returns `check_failed`, stop before backend writes unless the user explicitly says: `我确认接受使用本地旧版 <version> 继续写后台`.
+- A generic business authorization such as `授权调整3737` only authorizes the backend scope. It does not authorize using a stale Skill.
+- Do not bundle the two approvals together. First resolve Skill version status; only then ask for backend write authorization.
 
 ### Old Local Version Bootstrap
 
@@ -68,7 +77,7 @@ If the local old version does not have `bootstrap_update_talktrack_agent.ps1`, p
 
 ## Quick Workflow
 
-0. Run the Skill Update Check. If a newer GitHub version exists, recommend updating and wait for the user's confirmation before applying it. If the check fails, do not silently continue with an old local version for backend write/import/configuration work.
+0. Run the Skill Update Check. If a newer GitHub version exists, recommend updating and wait for the user's confirmation before applying it. If the check fails or local version is older than `v0.1.11`, do not ask for backend write authorization yet; first resolve the update/bootstrap gate or obtain an explicit stale-version override using the exact wording in `Stale Version Write Gate`.
 1. Classify the task mode before touching APIs: document-to-prompt drafting, smart Agent creation, prompt import, smart information collection design/check, read-only audit, intent / port check, terminal / hangup check, `llmNodeModelConfig` check, or prompt readback validation.
 2. Extract token from the user's curl or message.
    - Prefer `-H 'token: Bearer ...'`.
