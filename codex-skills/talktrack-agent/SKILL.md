@@ -1,6 +1,6 @@
 ---
 name: talktrack-agent
-version: v0.1.12
+version: v0.1.13
 github_repo: LIGHTNINGAI-CO-LIMITED/TalkTrack-Agent
 github_path: codex-skills/talktrack-agent
 github_branch: main
@@ -119,7 +119,7 @@ Choose one primary mode and keep the run inside that mode unless the user expand
 
 ## Bundled Scripts
 
-- Use `scripts/check_skill_update.py --check` before starting a task to compare the local skill version with GitHub. The checker reads file content through GitHub Contents API before falling back to raw GitHub URLs, and tries multiple fetch channels: Python `urllib`, `certifi` when installed, `curl.exe`, and PowerShell `WebClient`, so TLS/certificate-chain issues or raw-branch cache in one channel do not immediately block the check. Use `--apply` only after the user confirms they want to update the local installed skill.
+- Use `scripts/check_skill_update.py --check` before starting a task to compare the local skill version with GitHub. The checker first reads the real `refs/heads/main` commit SHA, then fetches files through GitHub tree/blob APIs before falling back to Contents API and raw GitHub URLs. It also tries multiple fetch channels: Python `urllib`, `certifi` when installed, `curl.exe`, and PowerShell `WebClient`, so TLS/certificate-chain issues or branch-content cache in one channel do not immediately block the check. Use `--apply` only after the user confirms they want to update the local installed skill.
 - Use `scripts/bootstrap_update_talktrack_agent.ps1` when an old local skill cannot self-update because the old Python-only update checker is blocked by local TLS/certificate-chain issues.
 - Use `scripts/create_doushen_real_prompt_ivr.py` for "create a new IVR from a stable template + import a UTF-8 prompt" tasks when its parameters fit. It validates the token, clones the template graph, forces the smart-Agent model to `闪电26BMoE-fast` (`llmNodeModelConfig.id=55`) instead of inheriting the template model, writes raw prompts under 10,000 characters unchanged, falls back to compacted prompt only after length/failure, and reports `promptStrategy`, `promptWrittenChars`, hashes, model readback matches, port labels, and terminal nodes.
 - Run bundled scripts with a token argument only for the current task; do not hardcode real tokens into scripts, docs, commits, or examples.
