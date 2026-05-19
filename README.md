@@ -24,3 +24,19 @@ codex-skills/talktrack-agent
 ```
 
 The old skill path `codex-skills/sd-admin-ivr-config` should be removed from the package to avoid duplicate skill discovery.
+
+## Required Write Preflight
+
+Before any backend write/import/configuration task in `D:\闪电智能`, run:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "D:\闪电智能\tools\talktrack_skill_preflight.ps1" -Skill talktrack-agent -Mode Write
+```
+
+If the local skill is stale and the local repo mirror is trusted/current, run:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "D:\闪电智能\tools\talktrack_skill_preflight.ps1" -Skill talktrack-agent -Mode Write -InstallFromLocalRepo
+```
+
+Do not treat a generic business authorization such as `授权调整3737` as permission to use a stale local skill. The preflight must print `PREFLIGHT_PASS` before backend writes.

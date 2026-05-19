@@ -1,6 +1,6 @@
 ---
 name: talktrack-agent
-version: v0.1.14
+version: v0.1.15
 github_repo: LIGHTNINGAI-CO-LIMITED/TalkTrack-Agent
 github_path: codex-skills/talktrack-agent
 github_branch: main
@@ -12,6 +12,14 @@ description: Use when configuring, creating, updating, validating, troubleshooti
 Use this TalkTrack-series skill to operate the Shandian Intelligent smart-Agent layer by API, not by logging into the page. The default path is: the user provides a valid `Bearer` token, validate it with `/account/findInfo`, then call `/api/web` endpoints directly.
 
 ## Skill Update Check
+
+For backend write/import/configuration tasks, first run the project-level preflight when the workspace is `D:\闪电智能`:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "D:\闪电智能\tools\talktrack_skill_preflight.ps1" -Skill talktrack-agent -Mode Write
+```
+
+If preflight fails because the local skill is stale and the local GitHub mirror under `D:\闪电智能\github\TalkTrack-Agent` is trusted/current, run the same preflight with `-InstallFromLocalRepo` and re-check. Do not request backend write authorization until preflight prints `PREFLIGHT_PASS`.
 
 At the start of any task using this skill, run the bundled update check:
 
@@ -32,6 +40,7 @@ If the check fails because GitHub, TLS/certificate chain, or the network is unav
 For backend write/import/configuration tasks, a stale or unknown skill version is a pre-authorization blocker. Do not ask the user to authorize backend changes such as "授权调整 <ivrId>" until the update gate is resolved.
 
 - If `local_version` is older than `v0.1.11`, stop and require a Skill update or bootstrap first.
+- If the project-level preflight script exists, `PREFLIGHT_PASS` is required before any backend write/import/configuration task.
 - If the update check returns `check_failed`, stop before backend writes unless the user explicitly says: `我确认接受使用本地旧版 <version> 继续写后台`.
 - A generic business authorization such as `授权调整3737` only authorizes the backend scope. It does not authorize using a stale Skill.
 - Do not bundle the two approvals together. First resolve Skill version status; only then ask for backend write authorization.
