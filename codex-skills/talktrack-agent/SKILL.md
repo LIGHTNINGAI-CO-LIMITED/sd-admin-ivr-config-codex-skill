@@ -1,6 +1,6 @@
 ---
 name: talktrack-agent
-version: v0.1.8
+version: v0.1.9
 github_repo: LIGHTNINGAI-CO-LIMITED/TalkTrack-Agent
 github_path: codex-skills/talktrack-agent
 github_branch: main
@@ -25,7 +25,7 @@ If the result is `update_available`, tell the user the local version and GitHub 
 python "C:\Users\luona\.codex\skills\talktrack-agent\scripts\check_skill_update.py" --apply
 ```
 
-If the check fails because GitHub or the network is unavailable, mention the failed check briefly and continue with the current local skill. The update check must not use, print, store, or request business API tokens; it only reads the public GitHub skill repository.
+If the check fails because GitHub, TLS/certificate chain, or the network is unavailable, do not treat the local skill as up-to-date. Report the local version and failure reason. For backend write/import/configuration tasks, pause and ask the user to update the skill or explicitly approve continuing with the local version. For read-only emergency investigation, you may continue only after stating that update status is unknown. The update check must not use, print, store, or request business API tokens; it only reads the public GitHub skill repository.
 
 ## Boundary
 
@@ -56,7 +56,7 @@ If the check fails because GitHub or the network is unavailable, mention the fai
 
 ## Quick Workflow
 
-0. Run the Skill Update Check. If a newer GitHub version exists, recommend updating and wait for the user's confirmation before applying it.
+0. Run the Skill Update Check. If a newer GitHub version exists, recommend updating and wait for the user's confirmation before applying it. If the check fails, do not silently continue with an old local version for backend write/import/configuration work.
 1. Classify the task mode before touching APIs: document-to-prompt drafting, smart Agent creation, prompt import, smart information collection design/check, read-only audit, intent / port check, terminal / hangup check, `llmNodeModelConfig` check, or prompt readback validation.
 2. Extract token from the user's curl or message.
    - Prefer `-H 'token: Bearer ...'`.
@@ -98,7 +98,7 @@ Choose one primary mode and keep the run inside that mode unless the user expand
 
 ## Bundled Scripts
 
-- Use `scripts/check_skill_update.py --check` before starting a task to compare the local skill version with GitHub. Use `--apply` only after the user confirms they want to update the local installed skill.
+- Use `scripts/check_skill_update.py --check` before starting a task to compare the local skill version with GitHub. The checker tries multiple fetch channels: Python `urllib`, `certifi` when installed, `curl.exe`, and PowerShell `WebClient`, so TLS/certificate-chain issues in one channel do not immediately block the check. Use `--apply` only after the user confirms they want to update the local installed skill.
 - Use `scripts/create_doushen_real_prompt_ivr.py` for "create a new IVR from a stable template + import a UTF-8 prompt" tasks when its parameters fit. It validates the token, clones the template graph, forces the smart-Agent model to `闪电26BMoE-fast` (`llmNodeModelConfig.id=55`) instead of inheriting the template model, writes raw prompts under 10,000 characters unchanged, falls back to compacted prompt only after length/failure, and reports `promptStrategy`, `promptWrittenChars`, hashes, model readback matches, port labels, and terminal nodes.
 - Run bundled scripts with a token argument only for the current task; do not hardcode real tokens into scripts, docs, commits, or examples.
 
