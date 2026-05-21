@@ -39,7 +39,7 @@ GET  /ivr/findAllTtsVoiceBaseInfo
 GET  /ivr/findModelList
 ```
 
-Allowed fallback: additional query-only endpoints may be used when needed for attribution, but write-like endpoint names remain forbidden.
+Allowed fallback: additional query-only endpoints, including variable-management / dialogue-field list endpoints discovered from the page or frontend definitions, may be used when needed for attribution. Write-like endpoint names remain forbidden.
 
 ## Raw JSON Layout
 
@@ -139,6 +139,9 @@ Typical deductions:
 If the smart Agent uses 智能信息采集, also check:
 
 - Standard mode uses `{collectParam}` exactly once.
+- Every field in `llmNodeCollectParamList` exists in `变量管理 -> 对话字段`.
+- Every `llmNodeCollectParamList[].id` is a real positive dialogue-field ID from variable-list readback.
+- No negative temporary IDs, guessed IDs, stale template IDs, or canvas-only field definitions are present.
 - Dialogue fields have concise field descriptions.
 - Field descriptions require evidence from user wording or conversation context.
 - Custom inline `param` JSON, if used, has field names matching configured dialogue fields.
@@ -149,6 +152,8 @@ If the smart Agent uses 智能信息采集, also check:
 Typical deductions:
 
 - P0-sized: prompt output format is broken and may prevent routing or collection.
+- P0-sized: smart information collection is enabled and `llmNodeCollectParamList` has fields, but `变量管理 -> 对话字段` is empty or missing those fields; call details will not return usable dialogue-field data.
+- P0-sized: collection fields use negative temporary IDs such as `-990101` or IDs not present in variable-management readback.
 - P1-sized: `{collectParam}` missing/duplicated, inline field names mismatch configured fields, or collection asks for unsupported/sensitive data without approval.
 - P2-sized: field descriptions are vague but likely recoverable with human review.
 
@@ -210,6 +215,8 @@ Suggested schema:
     "checked": false,
     "mode": "none",
     "fieldCount": 0,
+    "variableFieldCount": 0,
+    "collectionIdsValid": false,
     "items": []
   },
   "terminalClosingOverlapCheck": {

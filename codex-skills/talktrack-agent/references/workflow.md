@@ -99,7 +99,9 @@ If the user asks to move from read-only mode to a write mode, pause and restate 
 
 For source-document conversion, use `references/document-to-outbound-prompt-v0.1.md`. The output is a prompt package, not a backend write. Treat any later import as a separate `prompt-import` task.
 
-For smart information collection, read `references/smart-information-collection-v0.1.md`. Prefer the standard mode: enable 智能信息采集, configure dialogue fields, and insert `{collectParam}` once in the prompt. Do not switch to inline `param` JSON unless the user explicitly needs full prompt control or the backend workflow requires it.
+For smart information collection, read `references/smart-information-collection-v0.1.md`. Prefer the standard mode: create/select dialogue fields in `变量管理 -> 对话字段`, read the variable list, enable 智能信息采集, configure `llmNodeCollectParamList` with the real returned field IDs, and insert `{collectParam}` once in the prompt. Do not switch to inline `param` JSON unless the user explicitly needs full prompt control or the backend workflow requires it.
+
+Do not directly invent collection fields in canvas JSON. If `llmNodeCollectParamList` uses negative IDs, guessed IDs, stale template IDs, or fields absent from `变量管理 -> 对话字段`, the graph may save but call details will not return usable `对话字段` data.
 
 ## Base Reads
 
@@ -283,6 +285,8 @@ Check:
 - Non-hangup intent examples in the prompt are node IDs rather than terminal labels.
 - Terminal intent examples do not duplicate downstream terminal-node closing text. If downstream nodes speak the closing, smart-Agent terminal examples are short acknowledgements only.
 - If 智能信息采集 is enabled, `{collectParam}` appears exactly once in standard mode, or inline `param` JSON uses exact configured field names in custom mode.
+- If 智能信息采集 is enabled, every field referenced by `llmNodeCollectParamList` exists in `变量管理 -> 对话字段`, and every `llmNodeCollectParamList[].id` is the real positive ID returned by the variable list.
+- No negative temporary IDs, guessed IDs, stale template IDs, or canvas-only field definitions are present in collection config.
 - Dialogue-field descriptions are evidence-based and privacy-minimized.
 
 Optional browser check:
